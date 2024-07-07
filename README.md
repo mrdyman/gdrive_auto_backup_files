@@ -5,5 +5,6 @@ dont forget to run `npm install` After clone repo
 Start the app :
 `npm start`
 
-**NOTE**\n
-parent is google drive folder link for backup destination
+**NOTE**
+
+- parent is google drive folder link for backup destination
