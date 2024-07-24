@@ -8,16 +8,18 @@ const fs = require("fs");
 const app = express();
 const upload = multer();
 
+const { exec } = require('child_process');
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-    res.sendFile(`${__dirname}/index.html`);
-});
+// app.get("/", (req, res) => {
+//     res.sendFile(`${__dirname}/index.html`);
+// });
 
-app.listen(5050, () => {
-    console.log("Form running on port 5050");
-});
+// app.listen(5050, () => {
+//     console.log("Form running on port 5050");
+// });
 
 const KEYFILEPATH = path.join(__dirname, "cred.json");
 const SCOPES = ["https://www.googleapis.com/auth/drive"];
@@ -27,21 +29,21 @@ const auth = new google.auth.GoogleAuth({
     scopes: SCOPES,
 });
 
-app.post("/upload", upload.any(), async (req, res) => {
-    try {
-        console.log(req.body);
-        console.log(req.files);
-        const { body, files } = req;
+// app.post("/upload", upload.any(), async (req, res) => {
+//     try {
+//         console.log(req.body);
+//         console.log(req.files);
+//         const { body, files } = req;
 
-        for (let f = 0; f < files.length; f += 1) {
-        await uploadFile(files[f]);
-        }
+//         for (let f = 0; f < files.length; f += 1) {
+//         await uploadFile(files[f]);
+//         }
 
-        res.status(200).send("Form Submitted");
-    } catch (f) {
-        res.send(f.message);
-    }
-});
+//         res.status(200).send("Form Submitted");
+//     } catch (f) {
+//         res.send(f.message);
+//     }
+// });
 
 // Log function to write logs to both console and file
 const logToFile = (message) => {
@@ -68,7 +70,7 @@ const uploadFile = async (filePath, retries = 3, delay = 1000) => {
                 },
                 requestBody: {
                 name: fileName,
-                parents: ["xxM1Eocf7GmeNYvYm6UKhYeFAcca-o72xPbeCXM4"], // Update to your folder ID
+                parents: ["1cbWzZPT6OO7uHkABRSZDgB9CdFNoPWWR"], // Update to your folder ID
                 },
                 fields: "id,name",
             });
@@ -81,10 +83,12 @@ const uploadFile = async (filePath, retries = 3, delay = 1000) => {
                 logToFile(`Failed to delete file ${filePath}`, err);
             } else {
                 logToFile(`Deleted file ${filePath}`);
+                backupCallback();
                 }
             });
         } catch (error) {
             if (attempt < retries) {
+                console.log(error)
                 logToFile(`Attempt ${attempt} failed. Retrying in ${delay}ms...`);
                 await new Promise(res => setTimeout(res, delay));
             } else {
@@ -112,9 +116,29 @@ const readAndUploadFiles = async (directoryPath) => {
     });
 };
 
+function backupCallback() {
+    console.log("Callback executed");
+
+    exec('node example.js', (error, stdout, stderr) => {
+        if (error) {
+        console.error(`Error executing callback: ${error.message}`);
+        return;
+        }
+
+        if (stderr) {
+        console.error(`callback error output: ${stderr}`);
+        return;
+        }
+
+        console.log(`callback output:\n${stdout}`);
+    });
+}
+
 // Schedule the task to run every minute
-cron.schedule("* * * * *", () => {
-    logToFile("Running a task every minute");
+// cron.schedule("* * * * *", () => {
+//     logToFile("Running a task every minute");
     // readAndUploadFiles("/path/to/your/pictures/folder");
     readAndUploadFiles("./images");
-});
+// });
+
+// Everythings Done
