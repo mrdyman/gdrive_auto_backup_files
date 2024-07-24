@@ -13,13 +13,13 @@ const { exec } = require('child_process');
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// app.get("/", (req, res) => {
-//     res.sendFile(`${__dirname}/index.html`);
-// });
+app.get("/", (req, res) => {
+    res.sendFile(`${__dirname}/index.html`);
+});
 
-// app.listen(5050, () => {
-//     console.log("Form running on port 5050");
-// });
+app.listen(5050, () => {
+    console.log("Form running on port 5050");
+});
 
 const KEYFILEPATH = path.join(__dirname, "cred.json");
 const SCOPES = ["https://www.googleapis.com/auth/drive"];
@@ -29,21 +29,21 @@ const auth = new google.auth.GoogleAuth({
     scopes: SCOPES,
 });
 
-// app.post("/upload", upload.any(), async (req, res) => {
-//     try {
-//         console.log(req.body);
-//         console.log(req.files);
-//         const { body, files } = req;
+app.post("/upload", upload.any(), async (req, res) => {
+    try {
+        console.log(req.body);
+        console.log(req.files);
+        const { body, files } = req;
 
-//         for (let f = 0; f < files.length; f += 1) {
-//         await uploadFile(files[f]);
-//         }
+        for (let f = 0; f < files.length; f += 1) {
+        await uploadFile(files[f]);
+        }
 
-//         res.status(200).send("Form Submitted");
-//     } catch (f) {
-//         res.send(f.message);
-//     }
-// });
+        res.status(200).send("Form Submitted");
+    } catch (f) {
+        res.send(f.message);
+    }
+});
 
 // Log function to write logs to both console and file
 const logToFile = (message) => {
@@ -135,10 +135,8 @@ function backupCallback() {
 }
 
 // Schedule the task to run every minute
-// cron.schedule("* * * * *", () => {
-//     logToFile("Running a task every minute");
+cron.schedule("* * * * *", () => {
+    logToFile("Running a task every minute");
     // readAndUploadFiles("/path/to/your/pictures/folder");
     readAndUploadFiles("./images");
-// });
-
-// Everythings Done
+});
