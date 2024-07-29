@@ -1,16 +1,9 @@
 const stream = require("stream");
-const express = require("express");
-const multer = require("multer");
 const path = require("path");
 const { google } = require("googleapis");
 const fs = require("fs");
-const app = express();
-const upload = multer();
 
 const { exec } = require('child_process');
-
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 const KEYFILEPATH = path.join(__dirname, "cred.json");
 const SCOPES = ["https://www.googleapis.com/auth/drive"];
@@ -59,6 +52,7 @@ const uploadFile = async (filePath, retries = 3, delay = 1000) => {
             } else {
                 logToFile(`Deleted file ${filePath}`);
                 backupCallback();
+                return;
                 }
             });
         } catch (error) {
@@ -88,6 +82,8 @@ const readAndUploadFiles = async (directoryPath) => {
             const filePath = path.join(directoryPath, file);
             await uploadFile(filePath);
         });
+
+        process.exit();// exit app after backup completed
     });
 };
 
