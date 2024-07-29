@@ -45,16 +45,14 @@ const uploadFile = async (filePath, retries = 3, delay = 1000) => {
         
             logToFile(`Uploaded file ${data.name} ${data.id}`);
 
-            // Delete the file after successful upload
-            fs.unlink(filePath, (err) => {
-                if (err) {
-                logToFile(`Failed to delete file ${filePath}`, err);
-            } else {
-                logToFile(`Deleted file ${filePath}`);
-                backupCallback();
-                return;
-                }
-            });
+        // Delete the file after successful upload
+        try {
+            await fs.promises.unlink(filePath);
+            logToFile(`Deleted file ${filePath}`);
+        } catch (unlinkError) {
+            logToFile(`Failed to delete file ${filePath}`, unlinkError);
+        }
+        return; // Exit after successful upload and delete
         } catch (error) {
             if (attempt < retries) {
                 console.log(error)
@@ -67,55 +65,28 @@ const uploadFile = async (filePath, retries = 3, delay = 1000) => {
     }
 };
 
-// const readAndUploadFiles = async (directoryPath) => {
-//     fs.readdir(directoryPath, (err, files) => {
-//         if (err) {
-//             logToFile(`Could not list the directory.`, err);
-//             return;
-//         }
-        
-//         if(files.length === 0){
-//             logToFile(`The directory ${directoryPath} is empty.`);
-//         }
-    
-//         files.forEach(async (file) => {
-//             const filePath = path.join(directoryPath, file);
-//             await uploadFile(filePath);
-//         });
-
-//     });
-//     process.exit();// exit app after backup completed
-// };
-
 const readAndUploadFiles = async (directoryPath) => {
-    fs.readdir(directoryPath, async (err, files) => {
-        if (err) {
-            logToFile(`Could not list the directory.`, err);
-            return;
-        }
+    try {
+        const files = await fs.promises.readdir(directoryPath);
 
         if (files.length === 0) {
             logToFile(`The directory ${directoryPath} is empty.`);
-            process.exit();
-            return;
-        }
+        } else {
+            const uploadPromises = files.map(async (file) => {
+                const filePath = path.join(directoryPath, file);
+                await uploadFile(filePath);
+            });
 
-        const uploadPromises = files.map((file) => {
-            const filePath = path.join(directoryPath, file);
-            return uploadFile(filePath);
-        });
-
-        try {
             await Promise.all(uploadPromises);
             logToFile(`All files have been uploaded.`);
-        } catch (uploadErr) {
-            logToFile(`Error uploading files.`, uploadErr);
-        } finally {
-            process.exit(); // Exit app after backup completed
         }
-    });
+    } catch (err) {
+        logToFile(`Could not list the directory.`, err);
+    } finally {
+        console.log('Exiting process...');
+        process.exit(); // Exit app after backup completed
+    }
 };
-
 
 function backupCallback() {
     console.log("Callback executed");
