@@ -67,25 +67,55 @@ const uploadFile = async (filePath, retries = 3, delay = 1000) => {
     }
 };
 
+// const readAndUploadFiles = async (directoryPath) => {
+//     fs.readdir(directoryPath, (err, files) => {
+//         if (err) {
+//             logToFile(`Could not list the directory.`, err);
+//             return;
+//         }
+        
+//         if(files.length === 0){
+//             logToFile(`The directory ${directoryPath} is empty.`);
+//         }
+    
+//         files.forEach(async (file) => {
+//             const filePath = path.join(directoryPath, file);
+//             await uploadFile(filePath);
+//         });
+
+//     });
+//     process.exit();// exit app after backup completed
+// };
+
 const readAndUploadFiles = async (directoryPath) => {
-    fs.readdir(directoryPath, (err, files) => {
+    fs.readdir(directoryPath, async (err, files) => {
         if (err) {
             logToFile(`Could not list the directory.`, err);
             return;
         }
-        
-        if(files.length === 0){
+
+        if (files.length === 0) {
             logToFile(`The directory ${directoryPath} is empty.`);
+            process.exit();
+            return;
         }
-    
-        files.forEach(async (file) => {
+
+        const uploadPromises = files.map((file) => {
             const filePath = path.join(directoryPath, file);
-            await uploadFile(filePath);
+            return uploadFile(filePath);
         });
 
-        process.exit();// exit app after backup completed
+        try {
+            await Promise.all(uploadPromises);
+            logToFile(`All files have been uploaded.`);
+        } catch (uploadErr) {
+            logToFile(`Error uploading files.`, uploadErr);
+        } finally {
+            process.exit(); // Exit app after backup completed
+        }
     });
 };
+
 
 function backupCallback() {
     console.log("Callback executed");
