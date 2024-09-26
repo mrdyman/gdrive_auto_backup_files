@@ -38,7 +38,7 @@ const uploadFile = async (filePath, retries = 3, delay = 1000) => {
                 },
                 requestBody: {
                 name: fileName,
-                parents: [""], // Update to your folder ID
+                parents: ["1GdCq1h9w5vXArLhsCO3tREQmojRH2Ure"], // Update to your folder ID
                 },
                 fields: "id,name",
             });
